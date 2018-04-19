@@ -1,0 +1,27 @@
+# {{  ansible_managed }}
+[Unit]
+Description=logstash-shipper
+
+[Service]
+Type=simple
+User={{ logstash_shipper_user }}
+Group={{ logstash_shipper_group }}
+# Load env vars from /etc/default/ and /etc/sysconfig/ if they exist..
+EnvironmentFile=-/etc/default/logstash-shipper
+EnvironmentFile=-/etc/sysconfig/logstash-shipper
+
+# check before start
+ExecStartPre=/usr/share/logstash/bin/logstash "--path.settings" "{{ logstash_shipper_settings_dir }}" -t --log.level fatal --log.format=plain
+ExecStart=/usr/share/logstash/bin/logstash "--path.settings" "{{ logstash_shipper_settings_dir }}"
+Restart=always
+WorkingDirectory={{ logstash_shipper_settings_dir }}
+Nice=10
+LimitNOFILE=16384
+
+RestartSec=30s
+StartLimitIntervalSec=60
+StartLimitBurst=2
+
+
+[Install]
+WantedBy=multi-user.target

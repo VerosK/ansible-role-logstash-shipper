@@ -1,0 +1,97 @@
+
+- name: Create logstash-shipper settings dir
+  file:
+    name: '{{ logstash_shipper_settings_dir }}'
+    state: 'directory'
+
+- name: Create logstash-shipper config dir
+  file:
+    name: '{{ logstash_shipper_config_dir }}'
+    state: 'directory'
+
+- name: Create logstash-shipper log dir
+  file:
+    name: '{{ logstash_shipper_log_path }}'
+    state: 'directory'
+    owner: '{{ logstash_shipper_user }}'
+    group: '{{ logstash_shipper_group }}'
+
+- name: Create logstash-shipper lib dir
+  file:
+    name: '{{ logstash_shipper_data_path }}'
+    state: 'directory'
+    owner: '{{ logstash_shipper_user }}'
+    group: '{{ logstash_shipper_group }}'
+
+- name: Create logstash-shipper archive dir
+  file:
+    name: '{{ logstash_shipper_archive_path }}'
+    state: 'directory'
+    owner: '{{ logstash_shipper_user }}'
+    group: '{{ logstash_shipper_group }}'
+
+- name: Provide logstash-shipper.config
+  template:
+    src: logstash-shipper.yml.j2
+    dest: '{{ logstash_shipper_settings_dir }}/logstash.yml'
+    backup: '{{ logstash_shipper_do_backups }}'
+  notify: restart logstash-shipper
+
+- name: Provide logstash-shipper log4j2 config
+  template:
+    src: log4j2.properties.j2
+    dest: '{{ logstash_shipper_settings_dir }}/log4j2.properties'
+    backup: '{{ logstash_shipper_do_backups }}'
+  notify: restart logstash-shipper
+
+- name: Provide logstash-shipper jvm.options
+  template:
+    src: jvm.options.j2
+    dest: '{{ logstash_shipper_settings_dir }}/jvm.options'
+    backup: '{{ logstash_shipper_do_backups }}'
+  notify: restart logstash-shipper
+
+- name: Provide initial logstash-shipper config
+  template:
+    src: '{{ item }}'
+    dest: '{{ logstash_shipper_config_dir }}/{{ item|basename }}'
+    backup: '{{ logstash_shipper_do_backups }}'
+  with_fileglob: templates/conf.d/*.conf
+  notify: restart logstash-shipper
+
+- name: Create logstash shipper service defaults
+  template:
+    src: logstash-shipper-defaults.j2
+    dest: '/etc/default/logstash-shipper'
+    backup: '{{ logstash_shipper_do_backups }}'
+  notify: restart logstash-shipper
+
+- name: Create logstash shipper service
+  template:
+    src: logstash-shipper.service.j2
+    dest: '{{ logstash_shipper_systemd_unitfile }}'
+    backup: '{{ logstash_shipper_do_backups }}'
+  notify: restart logstash-shipper
+  register: _logstash_shipper_service
+
+- name: Make sure systemd found the config
+  systemd:
+    daemon_reload: true
+  when: _logstash_shipper_service|changed
+
+- name: Setup logstash shipper service
+  service:
+    name: '{{ logstash_shipper_service_name }}'
+    state: '{{ logstash_shipper_service_state }}'
+    enabled: '{{ logstash_shipper_service_enabled }}'
+
+- name: Setup logstash archive job
+  cron:
+    user: '{{ logstash_shipper_user }}'
+    name: "Compress old logstash archive files"
+    special_time: daily
+    state: present
+    job:
+      find '{{ logstash_shipper_archive_path }}' -type f -name *.txt -mtime +1 -print0 |
+      xargs -0 gzip -9
+  when: logstash_shipper_add_archive_job|default(1)

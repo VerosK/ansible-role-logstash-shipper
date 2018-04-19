@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+# This is not full-fledged Logstash config.
+# This is Logstash shipper config.
+#------------------------------------ Node ------------------------------------
+node.name: '{{ logstash_shipper_node_name }}'
+#
+# ----------------------------------- Paths ------------------------------------
+#
+#
+path.config : '{{ logstash_shipper_config_dir }}'
+path.data: '{{ logstash_shipper_data_path }}'
+path.logs: '{{ logstash_shipper_log_path }}'
+log.format: '{{ logstash_shipper_log_format }}'
+#pipeline.workers: 1
+#pipeline.batch.size: 1
+#
+# ---------------------------------- Network -----------------------------------
+#
+# Set the bind address to a specific IP (IPv4 or IPv6):
+#
+http.host: '{{ logstash_shipper_address }}'
+http.port: {{ logstash_shipper_http_port }}
+#
+# For more information, consult the network module documentation.
+#
+# ---------------------------------- Extra -----------------------------------
+{% if logstash_shipper_extra_config is defined %}
+{{ logstash_shipper_extra_config }}
+#   ____________________________________
+#  / Ansible takes care of this config, \
+#  \ don't touch manually, please       /
+#   ------------------------------------
+#         \   ^__^
+#          \  (oo)\_______
+#             (__)\       )\/\
+#                  ||----w |
+#                  ||     ||
+{% endif %}

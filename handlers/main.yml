@@ -1,0 +1,4 @@
+- name: restart logstash-shipper
+  service:
+    name: '{{ logstash_shipper_service_name }}'
+    state: 'restarted'

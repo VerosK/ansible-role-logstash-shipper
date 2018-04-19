@@ -1,0 +1,36 @@
+# name of Logstash package
+logstash_shipper_setup_redis: yes
+
+logstash_shipper_group: logstash
+logstash_shipper_user: logstash
+
+
+# service config
+logstash_shipper_service_name: logstash-shipper
+logstash_shipper_service_state: started
+logstash_shipper_service_enabled: true
+logstash_shipper_do_backups: true
+
+
+logstash_shipper_node_name: 'Logstash-shipper'
+logstash_shipper_data_path: /var/lib/logstash-shipper/
+logstash_shipper_log_path: /var/log/logstash-shipper/
+logstash_shipper_archive_path: /var/spool/logstash-archive/
+logstash_shipper_log_format: plain
+
+logstash_shipper_address: "0.0.0.0"
+logstash_shipper_http_port: "9601"
+logstash_shipper_extra_config: ~
+
+logstash_shipper_syslog_port: 8514
+logstash_shipper_syslog_json_port: 10514
+
+logstash_shipper_settings_dir: /etc/logstash-shipper/
+logstash_shipper_config_dir: /etc/logstash-shipper/config.d/
+
+logstash_shipper_systemd_unitfile:
+    /etc/systemd/system/{{ logstash_shipper_service_name }}.service
+
+
+
+
